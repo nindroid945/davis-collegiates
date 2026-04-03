@@ -66,7 +66,7 @@ function onEditInstallable(e) {
   const rowIndex = e.range.getRow();
   
   // Replace with the actual URL of your Node.js backend when deployed
-  const webhookUrl = "https://mai-littery-ronin.ngrok-free.dev/api/webhook"; 
+  const webhookUrl = "https://davis-collegiates.onrender.com/api/webhook"; 
   
   const ss = e.source;
   const ssName = ss.getName(); 

@@ -150,6 +150,10 @@ app.post('/api/webhook', (req, res) => {
   res.sendStatus(200);
 });
 
+app.get('/api/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
 app.get('/api/stream', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
