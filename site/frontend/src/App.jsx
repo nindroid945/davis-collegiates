@@ -89,7 +89,7 @@ export default function App() {
   useEffect(() => {
     // Port 3001 is where the Node Express server will list. 
     // Usually configured via env, assuming localhost for testing.
-    const source = new EventSource('https://davis-collegiates.onrender.com');
+    const source = new EventSource('https://davis-collegiates.onrender.com/api/stream');
 
     source.onmessage = (e) => {
       try {
