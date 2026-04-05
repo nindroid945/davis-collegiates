@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
 
-function EventCard({ event }) {
+const getTimePerPerson = (eventId) => {
+  if (!eventId) return 2;
+  const levelCode = eventId.charAt(0).toUpperCase();
+  const eventCodeNum = eventId.slice(-3);
+
+  let mins = 2; // Beginner / default
+  if (levelCode === 'I') mins = 2.5;
+  if (levelCode === 'A') mins = 3;
+
+  if (['111', '112'].includes(eventCodeNum)) mins = 5;
+  if (['301', '302', '311', '321', '322', '323', '341'].includes(eventCodeNum)) mins = 7.5;
+
+  return mins;
+};
+
+function EventCard({ event, waitTimeStr }) {
   const [expanded, setExpanded] = useState(false);
 
   const getMedal = (idx, score) => {
@@ -28,8 +43,12 @@ function EventCard({ event }) {
       <div className="event-header" onClick={() => setExpanded(!expanded)}>
         <div className="event-info">
           <h3>{event.name}</h3>
-          {/* <span className="event-code">{event.eventId}</span> */}
         </div>
+        {waitTimeStr && (
+          <div className="event-estimate" style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500', textAlign: 'right', whiteSpace: 'nowrap', marginLeft: '1rem' }}>
+            {waitTimeStr}
+          </div>
+        )}
       </div>
 
       {expanded && event.competitors && (
@@ -59,12 +78,44 @@ function EventCard({ event }) {
 }
 
 function RingColumn({ ringId, events }) {
+  const currentEvent = (events || []).find(ev => ev.status !== 'Finished');
+  let cumulativeWaitTime = 0;
+
   return (
     <div className="ring-column">
-      <h2 className="ring-title">Ring {ringId}</h2>
+      <h2 className="ring-title">
+        Ring {ringId}
+        {currentEvent && (
+          <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: '500', marginTop: '0.25rem' }}>
+            Current: {currentEvent.name}
+          </div>
+        )}
+      </h2>
       <div className="event-list">
         {events && events.length > 0 ? (
-          events.map(ev => <EventCard key={ev.eventId} event={ev} />)
+          events.map(ev => {
+            let estimatedWaitStr = "";
+            if (ev.status !== 'Finished') {
+              if (ev === currentEvent) {
+                estimatedWaitStr = "Ongoing";
+              } else {
+                const roundedMins = Math.round(cumulativeWaitTime);
+                if (roundedMins < 60) {
+                  estimatedWaitStr = `Starts in ~${roundedMins} mins`;
+                } else {
+                  const hr = Math.floor(roundedMins / 60);
+                  const min = roundedMins % 60;
+                  estimatedWaitStr = `Starts in ~${hr}h${min > 0 ? ` ${min}m` : ''}`;
+                }
+              }
+
+              const numRemaining = (ev.competitors || []).filter(c => !c.score || c.score === '-').length;
+              const timePer = getTimePerPerson(ev.eventId);
+              cumulativeWaitTime += (numRemaining * timePer);
+            }
+
+            return <EventCard key={ev.eventId} event={ev} waitTimeStr={estimatedWaitStr} />;
+          })
         ) : (
           <div className="empty-ring">No events currently scheduled.</div>
         )}
@@ -120,6 +171,7 @@ export default function App() {
       <header className="app-header">
         <h1>Davis Wushu Collegiates Event List</h1>
         <p>moo</p>
+        <p>Please show up to your events 15 minutes in advance! The time estimates will be slightly off.</p>
       </header>
 
       <main className="main-content">
