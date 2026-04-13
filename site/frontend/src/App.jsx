@@ -1,5 +1,31 @@
 import React, { useState, useEffect } from 'react';
 
+const SCHEDULE_CONFIG = {
+  1: { start: '08:30', lunchStart: '12:40', lunchEnd: '13:20' },
+  2: { start: '08:30', lunchStart: '12:12', lunchEnd: '12:52' },
+  3: { start: '09:35', lunchStart: '12:20', lunchEnd: '13:00' }
+};
+
+const WARMUP_EVENTS = ['AFA142', 'IFA122', 'IFA181', 'AFA381', 'IFA302'];
+
+const getMsForTimeStr = (str) => {
+  const [h, m] = str.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.getTime();
+};
+
+const formatClockTime = (ms) => {
+  const d = new Date(ms);
+  let h = d.getHours();
+  let m = d.getMinutes();
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12;
+  if (h === 0) h = 12;
+  const mStr = m < 10 ? '0' + m : m;
+  return `${h}:${mStr} ${ampm}`;
+};
+
 const getTimePerPerson = (eventId) => {
   if (!eventId) return 2;
   const levelCode = eventId.charAt(0).toUpperCase();
@@ -9,8 +35,8 @@ const getTimePerPerson = (eventId) => {
   if (levelCode === 'I') mins = 2.5;
   if (levelCode === 'A') mins = 3;
 
-  if (['111', '112'].includes(eventCodeNum)) mins = 5;
-  if (['301', '302', '311', '321', '322', '323', '341'].includes(eventCodeNum)) mins = 7.5;
+  if (['111', '112', '311', '321', '322', '323', '341'].includes(eventCodeNum)) mins = 5;
+  if (['301', '302'].includes(eventCodeNum)) mins = 7;
 
   return mins;
 };
@@ -79,7 +105,13 @@ function EventCard({ event, waitTimeStr }) {
 
 function RingColumn({ ringId, events }) {
   const currentEvent = (events || []).find(ev => ev.status !== 'Finished');
-  let cumulativeWaitTime = 0;
+
+  const config = SCHEDULE_CONFIG[ringId] || { start: '08:30', lunchStart: '12:00', lunchEnd: '13:00' };
+  const ringStartMs = getMsForTimeStr(config.start);
+  const lunchStartMs = getMsForTimeStr(config.lunchStart);
+  const lunchEndMs = getMsForTimeStr(config.lunchEnd);
+
+  let currentTimeMs = Math.max(Date.now(), ringStartMs);
 
   return (
     <div className="ring-column">
@@ -95,23 +127,28 @@ function RingColumn({ ringId, events }) {
         {events && events.length > 0 ? (
           events.map(ev => {
             let estimatedWaitStr = "";
+            let isWarmup = false;
+
             if (ev.status !== 'Finished') {
+              if (WARMUP_EVENTS.includes(ev.eventId)) {
+                currentTimeMs += 10 * 60000;
+                isWarmup = true;
+              }
+
+              if (currentTimeMs >= lunchStartMs && currentTimeMs < lunchEndMs) {
+                currentTimeMs = lunchEndMs;
+              }
+
               if (ev === currentEvent) {
                 estimatedWaitStr = "Ongoing";
               } else {
-                const roundedMins = Math.round(cumulativeWaitTime);
-                if (roundedMins < 60) {
-                  estimatedWaitStr = `Starts in ~${roundedMins} mins`;
-                } else {
-                  const hr = Math.floor(roundedMins / 60);
-                  const min = roundedMins % 60;
-                  estimatedWaitStr = `Starts in ~${hr}h${min > 0 ? ` ${min}m` : ''}`;
-                }
+                estimatedWaitStr = `Starts ~${formatClockTime(currentTimeMs)}`;
+                if (isWarmup) estimatedWaitStr += " (+10m warmup)";
               }
 
-              const numRemaining = (ev.competitors || []).filter(c => !c.score || c.score === '-').length;
+              const numRemaining = (ev.competitors || []).filter(c => !c.checked && (!c.score || c.score === '-')).length;
               const timePer = getTimePerPerson(ev.eventId);
-              cumulativeWaitTime += (numRemaining * timePer);
+              currentTimeMs += (numRemaining * timePer) * 60000;
             }
 
             return <EventCard key={ev.eventId} event={ev} waitTimeStr={estimatedWaitStr} />;

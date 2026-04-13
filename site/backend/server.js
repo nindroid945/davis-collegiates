@@ -97,12 +97,15 @@ function processScoreRow(event, parsed, rowData, headers) {
     score = typeof rawScore === 'number' ? rawScore.toFixed(2) : String(rawScore);
   }
 
+  const isChecked = rowData[0] === true || String(rowData[0]).toLowerCase() === 'true';
+
   let comp = event.competitors.find(c => c.name === name);
   if (!comp) {
-    comp = { name, score };
+    comp = { name, score, checked: isChecked };
     event.competitors.push(comp);
   } else {
     comp.score = score;
+    comp.checked = isChecked;
   }
 }
 
@@ -143,7 +146,9 @@ app.post('/api/webhook', (req, res) => {
   if (updateType === 'SCORE_UPDATE') {
     const headers = req.body.headers || [];
     processScoreRow(event, parsed, rowData, headers);
-    event.status = isFinished ? 'Finished' : '';
+
+    const allChecked = event.competitors.length > 0 && event.competitors.every(c => c.checked);
+    event.status = (isFinished || allChecked) ? 'Finished' : '';
   }
 
   broadcastState();
@@ -220,7 +225,8 @@ async function bootstrapState() {
           }
         }
 
-        event.status = isFinished ? 'Finished' : '';
+        const allChecked = event.competitors.length > 0 && event.competitors.every(c => c.checked);
+        event.status = (isFinished || allChecked) ? 'Finished' : '';
       }
     }
     console.log("Boostrap complete. State initialized.");
