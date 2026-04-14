@@ -3,16 +3,13 @@ import React, { useState, useEffect } from 'react';
 const SCHEDULE_CONFIG = {
   1: { start: '08:30', lunchStart: '12:40', lunchEnd: '13:20' },
   2: { start: '08:30', lunchStart: '12:12', lunchEnd: '12:52' },
-  3: { start: '09:35', lunchStart: '12:20', lunchEnd: '13:00' }
+  3: { start: '09:00', lunchStart: '12:20', lunchEnd: '13:00' }
 };
 
 const WARMUP_EVENTS = ['AFA142', 'IFA122', 'IFA181', 'AFA381', 'IFA302'];
 
 const getMsForTimeStr = (str) => {
-  const [h, m] = str.split(':').map(Number);
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return d.getTime();
+  return new Date(`2026-04-25T${str}:00-07:00`).getTime();
 };
 
 const formatClockTime = (ms) => {
