@@ -42,7 +42,7 @@ function EventCard({ event, waitTimeStr }) {
   const [expanded, setExpanded] = useState(false);
 
   const getMedal = (idx, score) => {
-    if (!score || score === '-' || score === '') return null;
+    if (!score || score === '-' || score === '' || score === '0') return null;
     if (idx === 0) return '🥇 ';
     if (idx === 1) return '🥈 ';
     if (idx === 2) return '🥉 ';
