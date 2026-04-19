@@ -42,7 +42,7 @@ function EventCard({ event, waitTimeStr }) {
   const [expanded, setExpanded] = useState(false);
 
   const getMedal = (idx, score) => {
-    if (!score || score === '-' || score === '' || score === '0') return null;
+    if (!score || score === '-' || score === '' || score === '0.00') return null;
     if (idx === 0) return '🥇 ';
     if (idx === 1) return '🥈 ';
     if (idx === 2) return '🥉 ';
@@ -50,8 +50,8 @@ function EventCard({ event, waitTimeStr }) {
   };
 
   const sortedCompetitors = [...(event.competitors || [])].sort((a, b) => {
-    const hasScoreA = a.score && a.score !== '-' && a.score !== '0';
-    const hasScoreB = b.score && b.score !== '-' && b.score !== '0';
+    const hasScoreA = a.score && a.score !== '-' && a.score !== '0.00';
+    const hasScoreB = b.score && b.score !== '-' && b.score !== '0.00';
 
     if (hasScoreA && hasScoreB) {
       return parseFloat(b.score) - parseFloat(a.score);
