@@ -50,8 +50,8 @@ function EventCard({ event, waitTimeStr }) {
   };
 
   const sortedCompetitors = [...(event.competitors || [])].sort((a, b) => {
-    const hasScoreA = a.score && a.score !== '-';
-    const hasScoreB = b.score && b.score !== '-';
+    const hasScoreA = a.score && a.score !== '-' && a.score !== '0';
+    const hasScoreB = b.score && b.score !== '-' && b.score !== '0';
 
     if (hasScoreA && hasScoreB) {
       return parseFloat(b.score) - parseFloat(a.score);
