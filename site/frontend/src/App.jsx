@@ -23,6 +23,13 @@ const formatClockTime = (ms) => {
   return `${h}:${mStr} ${ampm}`;
 };
 
+const isZeroScore = (score) => {
+  if (score === undefined || score === null || score === '-' || score === '') return true;
+  const parsed = parseFloat(score);
+  if (isNaN(parsed)) return true;
+  return parsed.toFixed(2) === '0.00';
+};
+
 const getTimePerPerson = (eventId) => {
   if (!eventId) return 2;
   const levelCode = eventId.charAt(0).toUpperCase();
@@ -41,8 +48,8 @@ const getTimePerPerson = (eventId) => {
 function EventCard({ event, waitTimeStr }) {
   const [expanded, setExpanded] = useState(false);
 
-  const getMedal = (idx, score) => {
-    if (!score || score === '-' || score === '' || score === '0.00') return null;
+  const getMedal = (idx, comp) => {
+    if (!comp.checked && isZeroScore(comp.score)) return null;
     if (idx === 0) return '🥇 ';
     if (idx === 1) return '🥈 ';
     if (idx === 2) return '🥉 ';
@@ -50,14 +57,16 @@ function EventCard({ event, waitTimeStr }) {
   };
 
   const sortedCompetitors = [...(event.competitors || [])].sort((a, b) => {
-    const hasScoreA = a.score && a.score !== '-' && a.score !== '0.00';
-    const hasScoreB = b.score && b.score !== '-' && b.score !== '0.00';
+    const isCompletedA = a.checked || !isZeroScore(a.score);
+    const isCompletedB = b.checked || !isZeroScore(b.score);
 
-    if (hasScoreA && hasScoreB) {
-      return parseFloat(b.score) - parseFloat(a.score);
+    if (isCompletedA && isCompletedB) {
+      let valA = isZeroScore(a.score) ? 0 : parseFloat(a.score);
+      let valB = isZeroScore(b.score) ? 0 : parseFloat(b.score);
+      return valB - valA;
     }
-    if (hasScoreA && !hasScoreB) return -1;
-    if (!hasScoreA && hasScoreB) return 1;
+    if (isCompletedA && !isCompletedB) return -1;
+    if (!isCompletedA && isCompletedB) return 1;
     return 0;
   });
 
@@ -87,10 +96,12 @@ function EventCard({ event, waitTimeStr }) {
             sortedCompetitors.map((comp, idx) => (
               <div key={idx} className="competitor-row">
                 <span className="competitor-name">
-                  {getMedal(idx, comp.score)}
+                  {getMedal(idx, comp)}
                   {comp.name}
                 </span>
-                <span className="competitor-score">{!comp.score || comp.score === '' ? '-' : comp.score}</span>
+                <span className="competitor-score">
+                  {(!comp.checked && isZeroScore(comp.score)) ? '-' : (isZeroScore(comp.score) ? '0.00' : comp.score)}
+                </span>
               </div>
             ))
           )}
@@ -143,7 +154,7 @@ function RingColumn({ ringId, events }) {
                 if (isWarmup) estimatedWaitStr += " (+10m warmup)";
               }
 
-              const numRemaining = (ev.competitors || []).filter(c => !c.checked && (!c.score || c.score === '-' || String(c.score).trim() === '0.00')).length;
+              const numRemaining = (ev.competitors || []).filter(c => !c.checked && isZeroScore(c.score)).length;
               const timePer = getTimePerPerson(ev.eventId);
               currentTimeMs += (numRemaining * timePer) * 60000;
             }
