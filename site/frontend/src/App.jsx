@@ -143,7 +143,7 @@ function RingColumn({ ringId, events }) {
                 if (isWarmup) estimatedWaitStr += " (+10m warmup)";
               }
 
-              const numRemaining = (ev.competitors || []).filter(c => !c.checked && (!c.score || c.score === '-')).length;
+              const numRemaining = (ev.competitors || []).filter(c => !c.checked && (!c.score || c.score === '-' || String(c.score).trim() === '0.00')).length;
               const timePer = getTimePerPerson(ev.eventId);
               currentTimeMs += (numRemaining * timePer) * 60000;
             }
