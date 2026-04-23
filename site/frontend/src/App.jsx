@@ -2,11 +2,20 @@ import React, { useState, useEffect } from 'react';
 
 const SCHEDULE_CONFIG = {
   1: { start: '08:30', lunchStart: '12:19', lunchEnd: '12:39' },
-  2: { start: '08:30', lunchStart: '11:59', lunchEnd: '12:19' },
+  2: { start: '08:30', lunchStart: '11:50', lunchEnd: '12:10' },
   3: { start: '09:00', lunchStart: '12:06', lunchEnd: '12:26' }
 };
 
-const WARMUP_EVENTS = ['AFA142', 'IFA122', 'IFA181', 'AFA381', 'IFA302', 'AFA101'];
+const WARMUP_EVENTS = [
+  'AFA101', 'AFA142', 'IFA122', 'IFA121',
+  'IFA181', 'AFA181', 'BFA142', 'IFA302'
+];
+
+const LUNCH_EVENTS = {
+  1: 'AFA122',
+  2: 'IFA121',
+  3: 'BFA121'
+};
 
 const getMsForTimeStr = (str) => {
   return new Date(`2026-04-25T${str}:00-07:00`).getTime();
@@ -143,8 +152,8 @@ function RingColumn({ ringId, events }) {
                 isWarmup = true;
               }
 
-              if (currentTimeMs >= lunchStartMs && currentTimeMs < lunchEndMs) {
-                currentTimeMs = lunchEndMs;
+              if (ev.eventId === LUNCH_EVENTS[ringId]) {
+                currentTimeMs = Math.max(currentTimeMs, lunchEndMs);
               }
 
               if (ev === currentEvent) {
