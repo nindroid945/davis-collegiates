@@ -160,8 +160,8 @@ function RingColumn({ ringId, events }) {
                 estimatedWaitStr = "Ongoing";
               } else {
                 estimatedWaitStr = `Starts ~${formatClockTime(currentTimeMs)}`;
-                if (isWarmup) estimatedWaitStr += " (+10m warmup)";
-                if (isLunch) estimatedWaitStr += " (+20m lunch)";
+                if (isWarmup) estimatedWaitStr += " (warmup starts 10m before)";
+                if (isLunch) estimatedWaitStr += " (judge lunch break starts 20m before)";
               }
 
               const numRemaining = (ev.competitors || []).filter(c => !c.checked && isZeroScore(c.score)).length;
