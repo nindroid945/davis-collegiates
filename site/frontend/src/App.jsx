@@ -118,10 +118,13 @@ function EventCard({ event, waitTimeStr }) {
             <div className="no-competitors">No competitors scored yet.</div>
           ) : (
             sortedCompetitors.map((comp, idx) => (
-              <div key={idx} className="competitor-row">
+              <div key={idx} className="competitor-row" style={{ alignItems: 'flex-start' }}>
                 <span className="competitor-name">
-                  {getMedal(idx, comp)}
-                  {comp.school ? comp.school : comp.name}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {getMedal(idx, comp)}
+                    {comp.name}
+                  </div>
+                  {comp.school}
                 </span>
                 <span className="competitor-score">
                   {(!comp.checked && isZeroScore(comp.score)) ? '-' : (isZeroScore(comp.score) ? '0.00' : comp.score)}
