@@ -54,6 +54,21 @@ const getTimePerPerson = (eventId) => {
   return mins;
 };
 
+function BreakCard({ title, timeStr }) {
+  return (
+    <div className="event-card break-card" style={{ backgroundColor: '#cbd5e1', cursor: 'default', borderLeft: '4px solid #94a3b8' }}>
+      <div className="event-header" style={{ padding: '0.75rem 1rem' }}>
+        <div className="event-info">
+          <h3 style={{ color: '#334155', fontSize: '1rem', fontStyle: 'italic' }}>{title}</h3>
+        </div>
+        <div className="event-estimate" style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500', textAlign: 'right', whiteSpace: 'nowrap', marginLeft: '1rem' }}>
+          {timeStr}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EventCard({ event, waitTimeStr }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -141,27 +156,38 @@ function RingColumn({ ringId, events }) {
       <div className="event-list">
         {events && events.length > 0 ? (
           events.map(ev => {
+            const items = [];
             let estimatedWaitStr = "";
-            let isWarmup = false;
-            let isLunch = false;
 
             if (ev.status !== 'Finished') {
-              if (WARMUP_EVENTS.includes(ev.eventId)) {
-                currentTimeMs += 10 * 60000;
-                isWarmup = true;
+              if (ev.eventId === LUNCH_EVENTS[ringId]) {
+                const lunchCardTime = `Starts ~${formatClockTime(currentTimeMs)}`;
+                currentTimeMs += 20 * 60000;
+                items.push(
+                  <BreakCard
+                    key={`lunch-${ev.eventId}`}
+                    title="Lunch Break (20m)"
+                    timeStr={lunchCardTime}
+                  />
+                );
               }
 
-              if (ev.eventId === LUNCH_EVENTS[ringId]) {
-                currentTimeMs += 20 * 60000;
-                isLunch = true;
+              if (WARMUP_EVENTS.includes(ev.eventId)) {
+                const warmupCardTime = `Starts ~${formatClockTime(currentTimeMs)}`;
+                currentTimeMs += 10 * 60000;
+                items.push(
+                  <BreakCard
+                    key={`warmup-${ev.eventId}`}
+                    title="Warmup Session (10m)"
+                    timeStr={warmupCardTime}
+                  />
+                );
               }
 
               if (ev === currentEvent) {
                 estimatedWaitStr = "Ongoing";
               } else {
                 estimatedWaitStr = `Starts ~${formatClockTime(currentTimeMs)}`;
-                if (isWarmup) estimatedWaitStr += " (warmup starts 10m before)";
-                if (isLunch) estimatedWaitStr += " (judge lunch break starts 20m before)";
               }
 
               const numRemaining = (ev.competitors || []).filter(c => !c.checked && isZeroScore(c.score)).length;
@@ -169,7 +195,11 @@ function RingColumn({ ringId, events }) {
               currentTimeMs += (numRemaining * timePer) * 60000;
             }
 
-            return <EventCard key={ev.eventId} event={ev} waitTimeStr={estimatedWaitStr} />;
+            items.push(
+              <EventCard key={ev.eventId} event={ev} waitTimeStr={estimatedWaitStr} />
+            );
+
+            return <React.Fragment key={`frag-${ev.eventId}`}>{items}</React.Fragment>;
           })
         ) : (
           <div className="empty-ring">No events currently scheduled.</div>
