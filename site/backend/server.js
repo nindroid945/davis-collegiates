@@ -19,6 +19,16 @@ let clients = [];
 
 function parseEventCode(code) {
   if (typeof code !== 'string' || (!code && code.length < 4)) return null;
+
+  if (code.toUpperCase().replace(/\s/g, '') === 'GROUPSETS') {
+    return {
+      level: 'N/A',
+      gender: 'N/A',
+      age: 'N/A',
+      eventNum: '901'
+    };
+  }
+
   const levelChar = code[0];
   const genderChar = code[1];
   const ageChar = code[2];
@@ -83,7 +93,11 @@ function broadcastState() {
 function processScoreRow(event, parsed, rowData, headers) {
   if (!rowData || !Array.isArray(rowData) || !headers || !Array.isArray(headers)) return;
 
-  const scoreIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('final score'));
+  const scoreIdx = headers.findIndex(h => {
+    if (!h) return false;
+    const str = String(h).toLowerCase().trim();
+    return str.includes('final score') || str === 'scores' || str === 'score';
+  });
   const nameIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('name'));
 
   if (nameIdx === -1 || scoreIdx === -1) return;
@@ -99,13 +113,27 @@ function processScoreRow(event, parsed, rowData, headers) {
 
   const isChecked = rowData[0] === true || String(rowData[0]).toLowerCase() === 'true';
 
+  let school = '';
+  const schoolIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('school'));
+  if (schoolIdx !== -1) school = String(rowData[schoolIdx] || '').trim();
+
+  let members = [];
+  headers.forEach((h, i) => {
+    if (h && String(h).toLowerCase().includes('member')) {
+      const memName = String(rowData[i] || '').trim();
+      if (memName) members.push(memName);
+    }
+  });
+
   let comp = event.competitors.find(c => c.name === name);
   if (!comp) {
-    comp = { name, score, checked: isChecked };
+    comp = { name, score, checked: isChecked, school, members };
     event.competitors.push(comp);
   } else {
     comp.score = score;
     comp.checked = isChecked;
+    comp.school = school;
+    comp.members = members;
   }
 }
 

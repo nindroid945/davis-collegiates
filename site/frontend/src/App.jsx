@@ -7,7 +7,7 @@ const SCHEDULE_CONFIG = {
 };
 
 const WARMUP_EVENTS = [
-  'AFA101', 'AFA142', 'IFA122', 'IFA121',
+  'AFA101', 'AFA142', 'IFA122',
   'IFA181', 'AFA181', 'BFA142', 'IFA302'
 ];
 
@@ -118,10 +118,18 @@ function EventCard({ event, waitTimeStr }) {
             <div className="no-competitors">No competitors scored yet.</div>
           ) : (
             sortedCompetitors.map((comp, idx) => (
-              <div key={idx} className="competitor-row">
+              <div key={idx} className="competitor-row" style={{ alignItems: 'flex-start' }}>
                 <span className="competitor-name">
-                  {getMedal(idx, comp)}
-                  {comp.name}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {getMedal(idx, comp)}
+                    {comp.name}
+                    {comp.school && <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem' }}>({comp.school})</span>}
+                  </div>
+                  {comp.members && comp.members.length > 0 && (
+                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '4px', marginLeft: getMedal(idx, comp) ? '1.5rem' : '0' }}>
+                      {comp.members.join(', ')}
+                    </div>
+                  )}
                 </span>
                 <span className="competitor-score">
                   {(!comp.checked && isZeroScore(comp.score)) ? '-' : (isZeroScore(comp.score) ? '0.00' : comp.score)}
