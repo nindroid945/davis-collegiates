@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 const SCHEDULE_CONFIG = {
-  1: { start: '08:30', lunchStart: '12:19', lunchEnd: '12:39' },
-  2: { start: '08:30', lunchStart: '11:50', lunchEnd: '12:10' },
-  3: { start: '09:00', lunchStart: '12:06', lunchEnd: '12:26' }
+  1: { start: '08:30' },
+  2: { start: '08:30' },
+  3: { start: '09:00' }
 };
 
 const WARMUP_EVENTS = [
@@ -123,10 +123,8 @@ function EventCard({ event, waitTimeStr }) {
 function RingColumn({ ringId, events }) {
   const currentEvent = (events || []).find(ev => ev.status !== 'Finished');
 
-  const config = SCHEDULE_CONFIG[ringId] || { start: '08:30', lunchStart: '12:00', lunchEnd: '13:00' };
+  const config = SCHEDULE_CONFIG[ringId] || { start: '08:30' };
   const ringStartMs = getMsForTimeStr(config.start);
-  const lunchStartMs = getMsForTimeStr(config.lunchStart);
-  const lunchEndMs = getMsForTimeStr(config.lunchEnd);
 
   let currentTimeMs = Math.max(Date.now(), ringStartMs);
 
@@ -145,6 +143,7 @@ function RingColumn({ ringId, events }) {
           events.map(ev => {
             let estimatedWaitStr = "";
             let isWarmup = false;
+            let isLunch = false;
 
             if (ev.status !== 'Finished') {
               if (WARMUP_EVENTS.includes(ev.eventId)) {
@@ -153,7 +152,8 @@ function RingColumn({ ringId, events }) {
               }
 
               if (ev.eventId === LUNCH_EVENTS[ringId]) {
-                currentTimeMs = Math.max(currentTimeMs, lunchEndMs);
+                currentTimeMs += 20 * 60000;
+                isLunch = true;
               }
 
               if (ev === currentEvent) {
@@ -161,6 +161,7 @@ function RingColumn({ ringId, events }) {
               } else {
                 estimatedWaitStr = `Starts ~${formatClockTime(currentTimeMs)}`;
                 if (isWarmup) estimatedWaitStr += " (+10m warmup)";
+                if (isLunch) estimatedWaitStr += " (+20m lunch)";
               }
 
               const numRemaining = (ev.competitors || []).filter(c => !c.checked && isZeroScore(c.score)).length;
