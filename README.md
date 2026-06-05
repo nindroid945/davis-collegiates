@@ -1,3 +1,3 @@
-lightweight website for davis wushu collegiates
-judging and competitor management is done through google sheets
-apps script is used to send updates to app on edit
+- lightweight website for davis wushu collegiates
+- judging and competitor management is done through google sheets
+- apps script is used to send updates to app on edit
